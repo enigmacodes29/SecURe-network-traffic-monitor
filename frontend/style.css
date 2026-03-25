@@ -1,0 +1,256 @@
+/* ================= GLOBAL ================= */
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top left, #020d5e, #221e4e);
+  color: #f5f3ff;
+  overflow-x: hidden;
+}
+
+/* background glow */
+body::before {
+  content: "";
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: rgba(168, 85, 247, 0.2);
+  filter: blur(120px);
+  top: -100px;
+  left: -100px;
+  z-index: -1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: rgba(250, 204, 21, 0.15);
+  filter: blur(120px);
+  bottom: -100px;
+  right: -100px;
+  z-index: -1;
+}
+
+/* ================= LOGIN ================= */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+
+  padding: 30px;
+  border-radius: 14px;
+  width: 320px;
+  text-align: center;
+
+  border: 1px solid rgba(255,255,255,0.1);
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.login-box h2 {
+  margin-bottom: 20px;
+  color: #c98c10;
+}
+
+/* inputs */
+.login-box input {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.login-box input::placeholder {
+  color: #ddd6fe;
+}
+
+/* login button */
+.login-box button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+
+  background: linear-gradient(135deg, #a855f7, #facc15);
+  color: black;
+
+  cursor: pointer;
+  margin-top: 10px;
+
+  transition: 0.3s;
+}
+
+.login-box button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(250,204,21,0.6);
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 15px 30px;
+
+  background: rgba(15, 10, 31, 0.7);
+  backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: bold;
+  color: #c88014;
+
+  text-shadow: 0 0 10px rgba(168,85,247,0.7);
+}
+
+/* ================= NAV BUTTONS ================= */
+
+.nav-btn {
+  margin-left: 10px;
+  padding: 8px 16px;
+
+  border-radius: 20px;
+  border: none;
+
+  background: rgba(255,255,255,0.05);
+  color: #f5f3ff;
+
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.nav-btn:hover {
+  background: #facc15;
+  color: black;
+}
+
+/* active tab */
+.nav-btn.active {
+  background: linear-gradient(135deg, #a855f7, #facc15);
+  color: black;
+  box-shadow: 0 0 12px rgba(250,204,21,0.6);
+}
+
+/* ================= MAIN ================= */
+
+.main {
+  padding: 30px;
+}
+
+/* ================= SECTION ================= */
+
+.section {
+  display: none;
+  animation: fade 0.3s ease-in-out;
+}
+
+.section.active {
+  display: block;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= CARDS ================= */
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+
+  padding: 20px;
+  border-radius: 14px;
+
+  margin-bottom: 20px;
+
+  border: 1px solid rgba(255,255,255,0.1);
+
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ================= INPUTS ================= */
+
+.main input {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-right: 10px;
+
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* ================= ACTION BUTTON ================= */
+
+button.action {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+
+  background: linear-gradient(135deg, #a855f7, #facc15);
+  color: black;
+
+  cursor: pointer;
+
+  box-shadow: 0 0 10px rgba(168,85,247,0.5);
+  transition: 0.3s;
+}
+
+button.action:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(250,204,21,0.7);
+}
+
+/* ================= LOGS ================= */
+
+#logs p {
+  background: rgba(255,255,255,0.05);
+  padding: 8px;
+  border-radius: 6px;
+  margin: 5px 0;
+}
+
+/* ================= ALERT ================= */
+
+#alerts p {
+  color: #facc15;
+  font-weight: bold;
+}
+
+/* ================= UX ================= */
+
+html {
+  scroll-behavior: smooth;
+}

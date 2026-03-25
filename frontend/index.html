@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SecURe — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c10;
+      --surface: #0d1117;
+      --surface2: #111920;
+      --border: #1f2d3d;
+      --accent: #00ffe0;
+      --accent2: #ff4d6d;
+      --accent3: #f7c948;
+      --text: #c9d1d9;
+      --dim: #4a5568;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --nav-w: 220px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--nav-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(180deg, transparent, var(--accent), transparent);
+      opacity: 0.15;
+    }
+
+    .brand {
+      padding: 0 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+
+    .brand-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.1em;
+    }
+
+    .brand-logo span { color: var(--accent); }
+
+    .brand-sub {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      letter-spacing: 0.2em;
+      margin-top: 0.2rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1.25rem;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--dim);
+      transition: color 0.15s, background 0.15s;
+      border-left: 2px solid transparent;
+      user-select: none;
+    }
+
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+    .nav-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(0,255,224,0.05);
+    }
+
+    .nav-icon { font-size: 1rem; width: 1.2rem; text-align: center; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    .user-info strong { color: var(--accent); display: block; margin-bottom: 0.2rem; }
+
+    .logout-btn {
+      margin-top: 0.75rem;
+      width: 100%;
+      padding: 0.5rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .logout-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .page-title {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+
+    .status-dot {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .content {
+      padding: 2rem;
+      flex: 1;
+    }
+
+    /* ── SECTIONS ── */
+    .section { display: none; animation: fadeIn 0.3s ease; }
+    .section.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    /* ── STAT CARDS ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-c, var(--accent));
+      opacity: 0.7;
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      margin-top: 0.25rem;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 0.55rem 1.1rem;
+      border: none;
+      border-radius: 5px;
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── LOG TABLE ── */
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    .log-table th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+      border-bottom: 1px solid var(--border);
+      font-weight: 400;
+    }
+
+    .log-table td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid rgba(31,45,61,0.5);
+      color: var(--text);
+    }
+
+    .log-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .badge-ok       { background: rgba(0,255,224,0.1);  color: var(--accent); }
+    .badge-failed   { background: rgba(255,77,109,0.12); color: var(--accent2); }
+    .badge-blocked  { background: rgba(247,201,72,0.12); color: var(--accent3); }
+    .badge-timeout  { background: rgba(100,100,100,0.2); color: #888; }
+
+    /* ── ALERTS ── */
+    .alert-item {
+      display: flex;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      border: 1px solid;
+      font-size: 0.82rem;
+      align-items: flex-start;
+    }
+
+    .alert-CRITICAL { background: rgba(255,77,109,0.08); border-color: rgba(255,77,109,0.25); }
+    .alert-HIGH     { background: rgba(247,201,72,0.07); border-color: rgba(247,201,72,0.2); }
+    .alert-MEDIUM   { background: rgba(0,170,255,0.07); border-color: rgba(0,170,255,0.2); }
+    .alert-LOW      { background: rgba(100,100,100,0.07); border-color: rgba(100,100,100,0.2); }
+
+    .alert-badge {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .badge-CRITICAL { background: rgba(255,77,109,0.2); color: var(--accent2); }
+    .badge-HIGH     { background: rgba(247,201,72,0.2); color: var(--accent3); }
+    .badge-MEDIUM   { background: rgba(0,170,255,0.2); color: #5bc8ff; }
+    .badge-LOW      { background: rgba(100,100,100,0.2); color: #888; }
+
+    .alert-body { flex: 1; }
+    .alert-msg { color: var(--text); margin-bottom: 0.2rem; }
+    .alert-meta { font-family: var(--mono); font-size: 0.62rem; color: var(--dim); }
+
+    /* ── ENCRYPTION ── */
+    .enc-field { margin-bottom: 1rem; }
+    .enc-label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .enc-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .enc-input:focus { border-color: var(--accent); }
+    .enc-input::placeholder { color: var(--dim); }
+
+    .enc-result {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      word-break: break-all;
+      min-height: 2.5rem;
+    }
+
+    .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── HOME ── */
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title span { color: var(--accent); }
+
+    .hero-sub {
+      color: var(--dim);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .feature-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .feature-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+    .feature-name {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    .feature-desc {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    .chart-wrap { position: relative; height: 260px; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">Sec<span>URe</span></div>
+    <div class="brand-sub">NETWORK MONITOR</div>
+  </div>
+
+  <nav>
+    <div class="nav-item active" data-section="home" onclick="showSection('home', this)">
+      <span class="nav-icon">⌂</span> Home
+    </div>
+    <div class="nav-item" data-section="dashboard" onclick="showSection('dashboard', this)">
+      <span class="nav-icon">◈</span> Overview
+    </div>
+    <div class="nav-item" data-section="logs" onclick="showSection('logs', this)">
+      <span class="nav-icon">≡</span> Traffic Logs
+    </div>
+    <div class="nav-item" data-section="alerts" onclick="showSection('alerts', this)">
+      <span class="nav-icon">⚑</span> Alerts
+    </div>
+    <div class="nav-item" data-section="encryption" onclick="showSection('encryption', this)">
+      <span class="nav-icon">⊛</span> Encryption
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <strong id="sidebar-user">—</strong>
+      AUTHENTICATED SESSION
+    </div>
+    <button class="logout-btn" onclick="logout()">LOGOUT</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Home</div>
+    <div class="status-dot">SYSTEM ONLINE</div>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME -->
+    <div id="home" class="section active">
+      <div class="hero-title">Network<br><span>Security</span> Monitor</div>
+      <p class="hero-sub">Real-time traffic analysis, threat detection, and encryption tools for your network.</p>
+      <button class="btn btn-primary" onclick="startMonitoring()">▶ Start Monitoring</button>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">📡</div>
+          <div class="feature-name">Traffic Capture</div>
+          <div class="feature-desc">Log and analyse all network events in real time.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-name">Threat Detection</div>
+          <div class="feature-desc">Brute force, port scans, and malicious IP alerts.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-name">Live Dashboard</div>
+          <div class="feature-desc">Protocol distribution and traffic statistics.</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-name">Encryption Lab</div>
+          <div class="feature-desc">Fernet symmetric encryption and key management.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section">
+      <div class="stat-grid">
+        <div class="stat-card" style="--accent-c: var(--accent)">
+          <div class="stat-label">Total Logs</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub">captured events</div>
+        </div>
+        <div class="stat-card" style="--accent-c: var(--accent3)">
+          <div class="stat-label">Total Bytes</div>
+          <div class="stat-value" id="stat-bytes">—</div>
+          <div class="stat-sub">bytes transferred</div>
+        </div>
+        <div class="stat-card" style="--accent-c: var(--accent2)">
+          <div class="stat-label">Failed Logins</div>
+          <div class="stat-value" id="stat-failed">—</div>
+          <div class="stat-sub">across all IPs</div>
+        </div>
+        <div class="stat-card" style="--accent-c: #a855f7">
+          <div class="stat-label">Alerts</div>
+          <div class="stat-value" id="stat-alerts">—</div>
+          <div class="stat-sub">total triggered</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Protocol Distribution</div>
+          <button class="btn btn-ghost" onclick="loadDashboard()">↻ Refresh</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="protocolChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Status Breakdown</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="logs" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Traffic Logs</div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="generateLogs()">+ Generate Logs</button>
+            <button class="btn btn-ghost" onclick="loadLogs()">↻ Refresh</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>TIMESTAMP</th>
+                <th>SRC IP</th>
+                <th>DST IP</th>
+                <th>PROTOCOL</th>
+                <th>PORT</th>
+                <th>BYTES</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="log-body">
+              <tr><td colspan="7"><div class="empty">No logs yet. Click "Generate Logs" to start.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="alerts" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Security Alerts</div>
+          <button class="btn btn-ghost" onclick="loadAlerts()">↻ Refresh</button>
+        </div>
+        <div id="alert-list">
+          <div class="empty">No alerts. Generate logs to trigger detections.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENCRYPTION -->
+    <div id="encryption" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Active Key</div>
+          <button class="btn btn-ghost" onclick="loadKey()">Load Key</button>
+        </div>
+        <div class="enc-result" id="key-display">—</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Encrypt / Decrypt</div></div>
+
+        <div class="enc-field">
+          <label class="enc-label">Message</label>
+          <input class="enc-input" id="enc-message" placeholder="Enter text to encrypt..." />
+        </div>
+
+        <div class="btn-row" style="margin-bottom:1.25rem">
+          <button class="btn btn-primary" onclick="encryptMsg()">🔒 Encrypt</button>
+          <button class="btn btn-ghost" onclick="decryptMsg()">🔓 Decrypt token below</button>
+        </div>
+
+        <div class="enc-field">
+          <label class="enc-label">Encrypted Token</label>
+          <div class="enc-result" id="enc-output">—</div>
+        </div>
+
+        <div class="enc-field" style="margin-top:1rem">
+          <label class="enc-label">Token to Decrypt</label>
+          <input class="enc-input" id="dec-input" placeholder="Paste encrypted token here..." />
+        </div>
+
+        <div class="enc-field" style="margin-top:0.75rem">
+          <label class="enc-label">Decrypted Result</label>
+          <div class="enc-result" id="dec-output">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  const API = "http://localhost:8000";
+  let protocolChart = null;
+  let statusChart = null;
+
+  function token() { return localStorage.getItem("token"); }
+
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token()}`
+    };
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(API + path, {
+      headers: authHeaders(),
+      ...opts,
+    });
+    if (res.status === 401) {
+      logout();
+      throw new Error("Unauthorized");
+    }
+    return res.json();
+  }
+
+  // ── NAVIGATION ──────────────────────────────────────────────────────────
+  const pageTitles = {
+    home: "Home", dashboard: "Overview",
+    logs: "Traffic Logs", alerts: "Alerts", encryption: "Encryption Lab"
+  };
+
+  function showSection(id, el) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if (el) el.classList.add("active");
+    document.getElementById("page-title").textContent = pageTitles[id] || id;
+
+    if (id === "dashboard") loadDashboard();
+    if (id === "logs") loadLogs();
+    if (id === "alerts") loadAlerts();
+  }
+
+  // ── DASHBOARD ───────────────────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const data = await apiFetch("/dashboard");
+      document.getElementById("stat-total").textContent = data.total_logs;
+      document.getElementById("stat-bytes").textContent = fmtBytes(data.total_bytes);
+      document.getElementById("stat-failed").textContent = data.status_counts?.FAILED_LOGIN || 0;
+
+      const alerts = await apiFetch("/alerts");
+      document.getElementById("stat-alerts").textContent = alerts.alerts.length;
+
+      renderProtocolChart(data.protocol_counts || {});
+      renderStatusChart(data.status_counts || {});
+    } catch (e) { console.error(e); }
+  }
+
+  function renderProtocolChart(counts) {
+    const ctx = document.getElementById("protocolChart").getContext("2d");
+    const labels = Object.keys(counts);
+    const values = Object.values(counts);
+    const colors = ["#00ffe0","#ff4d6d","#f7c948","#5bc8ff","#a855f7","#34d399","#fb923c"];
+
+    if (protocolChart) protocolChart.destroy();
+    protocolChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderRadius: 5,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: "#1f2d3d" }, ticks: { color: "#4a5568", font: { family: "'Share Tech Mono'" } } },
+          y: { grid: { color: "#1f2d3d" }, ticks: { color: "#4a5568", font: { family: "'Share Tech Mono'" } } }
+        }
+      }
+    });
+  }
+
+  function renderStatusChart(counts) {
+    const ctx = document.getElementById("statusChart").getContext("2d");
+    const labels = Object.keys(counts);
+    const values = Object.values(counts);
+    const colorMap = { OK:"#00ffe0", FAILED_LOGIN:"#ff4d6d", BLOCKED:"#f7c948", TIMEOUT:"#4a5568" };
+    const colors = labels.map(l => colorMap[l] || "#888");
+
+    if (statusChart) statusChart.destroy();
+    statusChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "right",
+            labels: { color: "#c9d1d9", font: { family: "'Share Tech Mono'", size: 11 }, padding: 16 }
+          }
+        }
+      }
+    });
+  }
+
+  // ── LOGS ────────────────────────────────────────────────────────────────
+  async function generateLogs() {
+    try {
+      await apiFetch("/logs/generate", {
+        method: "POST",
+        body: JSON.stringify({ count: 20 })
+      });
+      loadLogs();
+      loadAlerts();
+    } catch (e) { console.error(e); }
+  }
+
+  async function loadLogs() {
+    try {
+      const data = await apiFetch("/logs");
+      const tbody = document.getElementById("log-body");
+      if (!data.logs.length) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty">No logs yet. Click "Generate Logs".</div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.logs.slice(0, 100).map(l => `
+        <tr>
+          <td>${l.timestamp}</td>
+          <td>${l.src_ip}</td>
+          <td>${l.dst_ip}</td>
+          <td>${l.protocol}</td>
+          <td>${l.port}</td>
+          <td>${l.bytes}</td>
+          <td><span class="badge badge-${l.status.replace("_LOGIN","").replace("_","-").toLowerCase() === "failed" ? "failed" : l.status.toLowerCase()}">${l.status}</span></td>
+        </tr>
+      `).join("");
+    } catch (e) { console.error(e); }
+  }
+
+  // ── ALERTS ──────────────────────────────────────────────────────────────
+  async function loadAlerts() {
+    try {
+      const data = await apiFetch("/alerts");
+      const list = document.getElementById("alert-list");
+      if (!data.alerts.length) {
+        list.innerHTML = `<div class="empty">No alerts yet. Generate logs to trigger detections.</div>`;
+        return;
+      }
+      list.innerHTML = data.alerts.map(a => `
+        <div class="alert-item alert-${a.severity}">
+          <span class="alert-badge badge-${a.severity}">${a.severity}</span>
+          <div class="alert-body">
+            <div class="alert-msg">${a.message}</div>
+            <div class="alert-meta">${a.src_ip ? a.src_ip + " &bull; " : ""}${a.timestamp}</div>
+          </div>
+        </div>
+      `).join("");
+    } catch (e) { console.error(e); }
+  }
+
+  // ── ENCRYPTION ──────────────────────────────────────────────────────────
+  async function loadKey() {
+    try {
+      const data = await apiFetch("/key");
+      document.getElementById("key-display").textContent = data.key;
+    } catch (e) { console.error(e); }
+  }
+
+  async function encryptMsg() {
+    const msg = document.getElementById("enc-message").value.trim();
+    if (!msg) return;
+    try {
+      const data = await apiFetch("/encrypt", {
+        method: "POST",
+        body: JSON.stringify({ message: msg })
+      });
+      document.getElementById("enc-output").textContent = data.encrypted;
+      document.getElementById("dec-input").value = data.encrypted;
+    } catch (e) { console.error(e); }
+  }
+
+  async function decryptMsg() {
+    const tok = document.getElementById("dec-input").value.trim();
+    if (!tok) return;
+    try {
+      const data = await apiFetch("/decrypt", {
+        method: "POST",
+        body: JSON.stringify({ message: tok })
+      });
+      document.getElementById("dec-output").textContent = data.decrypted;
+    } catch (e) {
+      document.getElementById("dec-output").textContent = "⛔ Decryption failed";
+    }
+  }
+
+  async function startMonitoring() {
+    showSection("dashboard", document.querySelector('[data-section="dashboard"]'));
+    await generateLogs();
+  }
+
+  // ── UTILS ────────────────────────────────────────────────────────────────
+  function fmtBytes(b) {
+    if (b > 1e6) return (b/1e6).toFixed(1) + "M";
+    if (b > 1e3) return (b/1e3).toFixed(1) + "K";
+    return b;
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    window.location.href = "login.html";
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────
+  (function init() {
+    if (!token()) { window.location.href = "login.html"; return; }
+    const user = localStorage.getItem("username") || "user";
+    document.getElementById("sidebar-user").textContent = user.toUpperCase();
+  })();
+</script>
+</body>
+</html>
